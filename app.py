@@ -1,23 +1,16 @@
 import streamlit as st
 import pandas as pd
-import joblib
+import pickle
 
-# =========================
-# LOAD FILES
-# =========================
-model = joblib.load("model.pkl")
-encoders = joblib.load("encoders.pkl")
-features = joblib.load("features.pkl")
-
-st.set_page_config(page_title="Churn Predictor", layout="centered")
+# Load model and encoders
+model = pickle.load(open("rf_model.pkl", "rb"))
+encoders = pickle.load(open("label_encoders.pkl", "rb"))
 
 st.title("✈️ Customer Churn Prediction")
-st.write("Fill in the details below:")
 
-# =========================
-# INPUTS (MATCH YOUR DATASET)
-# =========================
+st.write("Enter customer details:")
 
+# INPUTS
 age = st.number_input("Age", 0, 100, 25)
 
 frequent_flyer = st.selectbox(
@@ -42,11 +35,8 @@ booked_hotel = st.selectbox(
     encoders['BookedHotelOrNot'].classes_
 )
 
-# =========================
 # ENCODE INPUT
-# =========================
-
-input_dict = {
+input_data = {
     "Age": age,
     "FrequentFlyer": encoders['FrequentFlyer'].transform([frequent_flyer])[0],
     "AnnualIncomeClass": encoders['AnnualIncomeClass'].transform([annual_income])[0],
@@ -55,20 +45,14 @@ input_dict = {
     "BookedHotelOrNot": encoders['BookedHotelOrNot'].transform([booked_hotel])[0]
 }
 
-input_df = pd.DataFrame([input_dict])
+input_df = pd.DataFrame([input_data])
 
-# Ensure correct column order
-input_df = input_df[features]
-
-# =========================
 # PREDICTION
-# =========================
-
 if st.button("Predict"):
     prediction = model.predict(input_df)[0]
-    probability = model.predict_proba(input_df)[0][1]
+    prob = model.predict_proba(input_df)[0][1]
 
     if prediction == 1:
-        st.error(f"❌ Customer will churn (Probability: {probability:.2f})")
+        st.error(f"❌ Customer will churn (Prob: {prob:.2f})")
     else:
-        st.success(f"✅ Customer will NOT churn (Probability: {probability:.2f})")
+        st.success(f"✅ Customer will NOT churn (Prob: {prob:.2f})")
