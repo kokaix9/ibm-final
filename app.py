@@ -1,22 +1,26 @@
 import streamlit as st
-import pickle
-import numpy as np
+import joblib
+import pandas as pd
 
-model = pickle.load(open("model.pkl", "rb"))
+# Load model + features
+model = joblib.load("model.pkl")
+features = joblib.load("features.pkl")
 
 st.title("Customer Churn Prediction")
 
-st.write("Enter customer details:")
+st.write("Enter details:")
 
+input_data = []
 
-feature1 = st.number_input("Feature 1")
-feature2 = st.number_input("Feature 2")
+for feature in features:
+    val = st.number_input(f"{feature}", value=0.0)
+    input_data.append(val)
 
 if st.button("Predict"):
-    input_data = np.array([[feature1, feature2]])
-    prediction = model.predict(input_data)
+    input_df = pd.DataFrame([input_data], columns=features)
+    prediction = model.predict(input_df)
 
     if prediction[0] == 1:
-        st.error("Customer will churn")
+        st.error("Customer will churn ❌")
     else:
-        st.success("Customer will not churn")
+        st.success("Customer will NOT churn ✅")
